@@ -4,23 +4,29 @@ const fileHelper = require('../util/file');
 const { validationResult } = require('express-validator/check');
 
 const Product = require('../models/product');
+const Section = require('../models/section');
 
-exports.getAddProduct = (req, res, next) => {
+exports.getAddProduct = async (req, res, next) => {
+  const cats = await Section.find();
+  console.log(cats);
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editing: false,
     hasError: false,
     errorMessage: null,
-    validationErrors: []
+    validationErrors: [],
+    categories: cats
   });
 };
 
-exports.postAddProduct = (req, res, next) => {
+exports.postAddProduct = async (req, res, next) => {
+  const cats = await Section.find();
   const title = req.body.title;
   const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
+  const category = req.body.category;
   if (!image) {
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'Add Product',
@@ -33,7 +39,8 @@ exports.postAddProduct = (req, res, next) => {
         description: description
       },
       errorMessage: 'Attached file is not an image.',
-      validationErrors: []
+      validationErrors: [],
+      categories: cats
     });
   }
   const errors = validationResult(req);
@@ -52,7 +59,8 @@ exports.postAddProduct = (req, res, next) => {
         description: description
       },
       errorMessage: errors.array()[0].msg,
-      validationErrors: errors.array()
+      validationErrors: errors.array(),
+      categories: cats
     });
   }
 
@@ -63,6 +71,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
+    category: category,
     userId: req.user
   });
   product
@@ -195,5 +204,67 @@ exports.deleteProduct = (req, res, next) => {
     res.status(500).json({
       message: "Deleting product failed!"
     });
+  });
+};
+
+exports.getAddSection = (req, res, next) => {
+  res.render('admin/edit-section', {
+    pageTitle: 'Add Section',
+    errorMessage: null,
+    path: '/admin/add-section',
+    editing: false,
+    validationErrors: [],
+    hasError: false
+  });
+};
+
+exports.postAddSection = (req, res, next) =>{
+  const name = req.body.name;
+  const image = req.file;
+  if(!image) {
+    return res.render('admin/edit-section', {
+      pageTitle: 'Add Section',
+      path: '/admin/add-section',
+      errorMessage: 'No Image Attached',
+      hasError: true,
+      validationErrors: [],
+      editing: false,
+      section: {
+        name: name
+      }
+    });
+  }
+
+  const errors = validationResult(req);
+
+  if(!errors.isEmpty()) {
+    return res.render('admin/edit-section', {
+      pageTitle: 'Add Section',
+      path: '/admin/add-section',
+      errorMessage: errors.array()[0].msg,
+      hasError: true,
+      validationErrors: errors.array(),
+      editing: false,
+      section: {
+        name: name
+      }
+    });
+  }
+
+  const imageUrl = image.path;
+
+  const newSection = new Section({
+    name: name,
+    imageUrl: imageUrl
+  });
+  return newSection.save()
+  .then(saved => {
+    console.log('Saved Section Successfully!');
+    res.redirect('/');
+  })
+  .catch(err => {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   });
 };

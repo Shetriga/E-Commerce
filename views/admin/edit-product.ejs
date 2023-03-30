@@ -30,6 +30,15 @@
                     value="<% if (editing || hasError) { %><%= product.imageUrl %><% } %>">
             </div> -->
             <div class="form-control">
+                <label for="category">Category</label>
+                <select name="category" id="category">
+                    <option>Select...</option>
+                    <% categories.forEach ((cat) => { %>
+                        <option value="<%= cat.name %>"><%=cat.name%></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-control">
                 <label for="image">Image</label>
                 <input 
                     type="file" 

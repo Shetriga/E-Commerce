@@ -49,6 +49,12 @@ router.post(
   adminController.postEditProduct
 );
 
+router.get('/add-section', adminController.getAddSection);
+
+router.post('/add-section', [
+  body('name', 'Invalid Section Name').isString().isLength({ min: 5 }).trim()
+], adminController.postAddSection);
+
 router.delete('/product/:productId', isAuth, adminController.deleteProduct);
 
 module.exports = router;
